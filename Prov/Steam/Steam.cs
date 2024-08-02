@@ -1,15 +1,33 @@
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp;
+using Flurl;
 using GamIt.Db.Models;
 
-namespace GamIt.Prov;
+namespace GamIt.Prov.Steam;
 
-public sealed class SteamStore : IMetadataProvider
+public sealed class Steam : IMetadataProvider, IGameLibrary
 {
     public const string Source = "Steam";
+
+
+    public ImmutableList<string> ScanGames()
+    {
+        var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var scanDir = Path.Combine(homeDir, ".local/share/Steam/steamapps/common");
+        return Directory.EnumerateDirectories(scanDir).Select(Path.GetFileName).Cast<string>()
+            .Except(new[] { "Steam Controller Configs", "Steamworks Shared" })
+            .ToImmutableList();
+    }
+
+    public void Launch(string id)
+    {
+        Process.Start($"steam steam://launch/{id}");
+    }
 
     public async ValueTask<ImmutableList<Genre>> GetGenres()
     {
@@ -41,5 +59,14 @@ public sealed class SteamStore : IMetadataProvider
                         }).ToImmutableList()
                 };
             }).ToImmutableList();
+    }
+
+    public async ValueTask<string> LookupId(string name)
+    {
+        var context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
+        var doc = await context.OpenAsync("https://store.steampowered.com/search".SetQueryParam("term", name)
+            .SetQueryParam("category1", 998));
+        var first = doc.QuerySelector("a[data-ds-appid]");
+        return first!.GetAttribute("data-ds-appid")!;
     }
 }
