@@ -21,6 +21,7 @@ public sealed class Steam : IMetadataProvider, IGameLibrary
         var scanDir = Path.Combine(homeDir, ".local/share/Steam/steamapps/common");
         return Directory.EnumerateDirectories(scanDir).Select(Path.GetFileName).Cast<string>()
             .Except(new[] { "Steam Controller Configs", "Steamworks Shared" })
+            .Where(v => !v.StartsWith("SteamLinux") && !v.StartsWith("Proton "))
             .ToImmutableList();
     }
 
@@ -67,6 +68,7 @@ public sealed class Steam : IMetadataProvider, IGameLibrary
         var doc = await context.OpenAsync("https://store.steampowered.com/search".SetQueryParam("term", name)
             .SetQueryParam("category1", 998));
         var first = doc.QuerySelector("a[data-ds-appid]");
+        if (first == null) throw new ApplicationException("No matching appID found searching with " + name);
         return first!.GetAttribute("data-ds-appid")!;
     }
 }
