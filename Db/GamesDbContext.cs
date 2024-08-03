@@ -12,6 +12,10 @@ public class GamesDbContext : DbContext
     public DbSet<Genre> Genres { get; set; }
     public DbSet<GameGenre> GameGenres { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseSqlite($"Data Source={Paths.DbPath};Cache=Shared");
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,5 +27,6 @@ public class GamesDbContext : DbContext
         modelBuilder.Entity<Game>().HasIndex(g => g.Name).IsUnique();
         modelBuilder.Entity<Genre>().HasIndex(g => g.Name).IsUnique();
         modelBuilder.Entity<Genre>().HasIndex(g => new { g.ProviderSource, g.ProviderId }).IsUnique();
+        modelBuilder.Entity<GameGenre>().HasKey(g => new { g.GameId, g.GenreId });
     }
 }

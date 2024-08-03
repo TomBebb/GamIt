@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Text.Json;
+using System.IO;
 using Avalonia;
-using GamIt.Prov.Steam;
+using GamIt.Db;
 
 namespace GamIt;
 
@@ -13,14 +13,9 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        var demo = new Steam();
-        var gameNames = demo.ScanGames();
-        Console.WriteLine("games: " + string.Join(", ", gameNames));
-        var personaId = demo.LookupId("Persona 5 reload").GetAwaiter().GetResult();
-        Console.WriteLine(personaId);
-        var genres = demo.GetGenres().GetAwaiter().GetResult();
-        Console.WriteLine(JsonSerializer.Serialize(genres));
-        Console.WriteLine(DateOnly.Parse("Feb 1, 2024"));
+        Directory.CreateDirectory(Paths.LocalAppDir);
+        using var db = new GamesDbContext();
+        db.Database.EnsureCreated();
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
