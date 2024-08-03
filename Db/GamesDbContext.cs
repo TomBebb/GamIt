@@ -10,7 +10,9 @@ public class GamesDbContext : DbContext
     private const string DateFormat = "yyyy-MM-dd";
     public DbSet<Game> Games { get; set; }
     public DbSet<Genre> Genres { get; set; }
+    public DbSet<Series> Series { get; set; }
     public DbSet<GameGenre> GameGenres { get; set; }
+    public DbSet<GameSeries> GameSeries { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -28,5 +30,6 @@ public class GamesDbContext : DbContext
         modelBuilder.Entity<Genre>().HasIndex(g => g.Name).IsUnique();
         modelBuilder.Entity<Genre>().HasIndex(g => new { g.ProviderSource, g.ProviderId }).IsUnique();
         modelBuilder.Entity<GameGenre>().HasKey(g => new { g.GameId, g.GenreId });
+        modelBuilder.Entity<GameSeries>().HasKey(g => new { g.GameId, g.SeriesId });
     }
 }

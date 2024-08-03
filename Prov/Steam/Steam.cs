@@ -3,6 +3,9 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AngleSharp;
 using Flurl;
@@ -70,5 +73,15 @@ public sealed class Steam : IMetadataProvider, IGameLibrary
         var first = doc.QuerySelector("a[data-ds-appid]");
         if (first == null) throw new ApplicationException("No matching appID found searching with " + name);
         return first!.GetAttribute("data-ds-appid")!;
+    }
+
+    public async ValueTask<GameData> LookupGame(string id)
+    {
+        var client = new HttpClient();
+        var data = await client.GetFromJsonAsync<ImmutableDictionary<string, GameDataWrapper>>(
+            $"https://store.steampowered.com/api/appdetails?appids={id}",
+            new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
+        return data[id]?.Data;
     }
 }

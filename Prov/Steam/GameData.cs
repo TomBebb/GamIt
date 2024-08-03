@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using System.Text.Json.Serialization;
 
@@ -11,7 +10,7 @@ public sealed class GameGenreData
 
 public sealed class GameReleaseDateData
 {
-    public DateOnly? Date { get; set; }
+    public string? Date { get; set; }
 }
 
 public sealed class GameScreenshotData
@@ -25,7 +24,7 @@ public sealed class GameData
 {
     public string Name { get; set; }
 
-    [JsonPropertyName("steam_appid")] public string SteamId { get; set; }
+    [JsonPropertyName("steam_appid")] public int SteamId { get; set; }
     public string DetailedDescription { get; set; }
     public string ShortDescription { get; set; }
     public string HeaderImage { get; set; }
@@ -41,4 +40,9 @@ public sealed class GameData
 
     public GameReleaseDateData ReleaseDate { get; set; }
     public string Background { get; set; }
+}
+
+public class GameDataWrapper
+{
+    public GameData Data { get; set; }
 }
