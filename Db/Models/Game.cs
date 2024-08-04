@@ -18,7 +18,8 @@ public class Game
     [StringLength(32)] public string LibraryId { get; set; } = null!;
     [StringLength(32)] public string LibrarySource { get; set; } = null!;
 
-    public DateOnly ReleaseDate { get; set; }
+    public DateOnly? ReleaseDate { get; set; }
+
     public ImmutableList<Genre> Genres { get; set; } = null!;
     public ImmutableList<GameGenre> GameGenres { get; set; } = null!;
     public ImmutableList<Series> Series { get; set; } = null!;

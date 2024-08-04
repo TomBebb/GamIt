@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using AngleSharp;
 using Flurl;
 using GamIt.Db.Models;
+using Serilog;
 
 namespace GamIt.Prov.Steam;
 
@@ -35,14 +36,21 @@ public sealed class Steam : IMetadataProvider, IGameLibrary
 
     public async ValueTask<ImmutableList<Genre>> GetGenres()
     {
+        Log.Debug("Fetching genres raw");
+        var raw = await new HttpClient().GetStringAsync("https://store.steampowered.com/search");
+        Log.Debug("Fetched genres raw", new
+        {
+            raw.Length
+        });
         var context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
         var doc = await context.OpenAsync("https://store.steampowered.com/search");
+        Log.Debug("Got raw genres HTML");
         return doc.GetElementsByClassName("popup_genre_expand_header")
             .Where(el => el.HasAttribute("data-genre-group")).Select(el =>
             {
                 var group = el.GetAttribute("data-genre-group")!;
                 var name = el.TextContent.Trim();
-                Console.WriteLine($"Scanning genre groups for name:{name}, group:{group}");
+                Log.Debug("Scanning genre groups for name:{0}, group:{1}", name, group);
                 return new Genre
                 {
                     Name = name,
@@ -73,6 +81,22 @@ public sealed class Steam : IMetadataProvider, IGameLibrary
         var first = doc.QuerySelector("a[data-ds-appid]");
         if (first == null) throw new ApplicationException("No matching appID found searching with " + name);
         return first!.GetAttribute("data-ds-appid")!;
+    }
+
+    public static Game MapDataToGame(GameData data)
+    {
+        return new Game
+        {
+            ProviderSource = Source,
+            ProviderId = data.SteamId.ToString(),
+            Name = data.Name,
+            Description = data.DetailedDescription,
+            Summary = data.ShortDescription,
+            ReleaseDate = data.ReleaseDate?.Date != null ? DateOnly.Parse(data.ReleaseDate.Date) : null,
+            LibrarySource = Source,
+            LibraryId = data.SteamId.ToString(),
+            Genres = data.Genres.Select(v => new Genre { Name = v.Description }).ToImmutableList()
+        };
     }
 
     public async ValueTask<GameData> LookupGame(string id)

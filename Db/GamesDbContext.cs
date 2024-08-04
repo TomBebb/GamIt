@@ -22,8 +22,10 @@ public class GamesDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Game>().Property(g => g.ReleaseDate)
-            .HasConversion(v => v.ToString(DateFormat),
-                v => DateOnly.ParseExact(v, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None));
+            .HasConversion(v => v.HasValue ? v.Value.ToString(DateFormat) : null,
+                v => v != null
+                    ? DateOnly.ParseExact(v!, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None)
+                    : null);
         modelBuilder.Entity<Game>().HasIndex(g => new { g.ProviderSource, g.ProviderId }).IsUnique();
         modelBuilder.Entity<Game>().HasIndex(g => new { g.LibrarySource, g.LibraryId }).IsUnique();
         modelBuilder.Entity<Game>().HasIndex(g => g.Name).IsUnique();

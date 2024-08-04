@@ -2,6 +2,7 @@
 using System.IO;
 using Avalonia;
 using GamIt.Db;
+using Serilog;
 
 namespace GamIt;
 
@@ -13,9 +14,18 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        using var log = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.Console()
+            .CreateLogger();
+        Log.Logger = log;
+        Log.Information("GamIt started");
+
         Directory.CreateDirectory(Paths.LocalAppDir);
         using var db = new GamesDbContext();
         db.Database.EnsureCreated();
+
+        GameManager.ResyncAll().GetAwaiter().GetResult();
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
